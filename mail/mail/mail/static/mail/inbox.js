@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function compose_email() {
-  const blah = document.getElementById('foo').value;
-  console.log(blah);
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
@@ -28,8 +26,7 @@ function compose_email() {
     const body = document.querySelector('#compose-body').value;
     const subject = document.querySelector('#compose-subject').value;
     const recipients = document.querySelector('#compose-recipients').value;
-    console.log(recipients)
-
+    
     // submit data via post
     fetch('/emails', {
       method: 'POST',
@@ -46,31 +43,72 @@ function compose_email() {
 
     return false;
   }
-
+  load_mailbox('sent');
 }
 
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
-  document.querySelector('#emails-body').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   
-  if (mailbox === 'inbox') {  
-    
+  // User's Sent mailbox
+  if (mailbox === 'sent') {
+    document.querySelector('#emails-view').innerHTML = `<h1>Sent mail</h1>`;
+    fetch('/emails/sent')
+      .then(response => response.json())
+      .then(emails => {
+        const user = document.querySelector('#user').textContent;
+        let content = document.querySelector('#emails-view');
+
+        emails.forEach(email => {
+          summary = [
+            email.sender,
+            email.subject,
+            email.timestamp,
+            email.read
+          ];
+          for (const field of summary) {
+            let p = document.createElement('p');
+            p.appendChild(document.createTextNode(field));
+            content.appendChild(p);
+          }
+          let hr = document.createElement('hr');
+          content.appendChild(hr);
+        })
+      })
+  }
+  
+  // User's Inbox
+  else if (mailbox === 'inbox') {  
     
     fetch('/emails/inbox')
       .then(response => response.json())
       .then(emails => {
-        //console.log(emails);
+        const user = document.querySelector('#user').textContent;
+        let content = document.querySelector('#emails-view');
+        
         emails.forEach(email => {
-          const user = document.querySelector('#user').textContent;
-
+          
           if (email.recipients.includes(user)) {
-              setInner(email)
+            summary = [
+              email.sender, 
+              email.subject, 
+              email.timestamp,
+              email.read
+            ];
+            for (const field of summary) {
+              console.log(field)
+              let p = document.createElement('p');
+              
+              p.appendChild(document.createTextNode(field));
+              content.appendChild(p);
+            }
+            let hr = document.createElement('hr');
+            content.appendChild(hr);
           }
         })
       })
@@ -78,29 +116,7 @@ function load_mailbox(mailbox) {
   } else {
 
     // Body of email div
-    document.querySelector('#emails-body').innerHTML = `<p>not inbox!</p>`;
+    document.querySelector('#emails-body').innerHTML = `<p>default</p>`;
   }
    
-}
-
-function setInner(email) {
-  //document.querySelector('#emails-content').innerHTML = element.id;
-  var ul = document.querySelector('#emails-content');
-  for (field in email) {
-    var li = document.createElement('li');
-    li.appendChild(document.createTextNode(email[field]));
-    ul.appendChild(li);
-    //console.log(email[field], '\n');
-  }
-  /*
-  var ul = document.querySelector('#emails-content');
-  for (var i = 0; i < element.length; i++) {
-    var obj = element[i];
-    console.log(obj);
-    var li = document.createElement('li');
-    li.appendChild(document.createTextNode(obj.title));
-    ul.appendChild(li);
-  }
-  */
-  return true;
 }
