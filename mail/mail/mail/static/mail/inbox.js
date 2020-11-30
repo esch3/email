@@ -39,11 +39,11 @@ function compose_email() {
       .then(response => response.json())
       .then(result => {
         console.log(result);
+        load_mailbox('sent');
       });
-
+    
     return false;
   }
-  load_mailbox('sent');
 }
 
 function load_mailbox(mailbox) {
@@ -55,68 +55,47 @@ function load_mailbox(mailbox) {
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
   
-  // User's Sent mailbox
-  if (mailbox === 'sent') {
-    document.querySelector('#emails-view').innerHTML = `<h1>Sent mail</h1>`;
-    fetch('/emails/sent')
-      .then(response => response.json())
-      .then(emails => {
-        const user = document.querySelector('#user').textContent;
-        let content = document.querySelector('#emails-view');
-
-        emails.forEach(email => {
-          summary = [
-            email.sender,
-            email.subject,
-            email.timestamp,
-            email.read
-          ];
-          for (const field of summary) {
-            let p = document.createElement('p');
-            p.appendChild(document.createTextNode(field));
-            content.appendChild(p);
-          }
-          let hr = document.createElement('hr');
-          content.appendChild(hr);
-        })
-      })
+  switch(mailbox) {
+    case "sent": 
+      fetch('/emails/sent')
+        .then(response => response.json())
+        .then(emails => {
+          display_emails(emails);
+        });
+        break;
+    case "inbox":   
+      fetch('/emails/inbox')
+        .then(response => response.json())
+        .then(emails => {
+          display_emails(emails);
+        });
+        break;
+    case "archive": 
+      fetch('/emails/archive')
+        .then(reponse => response.json())
+        .then(emails => {
+          display_emails(emails);
+      });
+      break;
   }
-  
-  // User's Inbox
-  else if (mailbox === 'inbox') {  
-    
-    fetch('/emails/inbox')
-      .then(response => response.json())
-      .then(emails => {
-        const user = document.querySelector('#user').textContent;
-        let content = document.querySelector('#emails-view');
-        
-        emails.forEach(email => {
-          
-          if (email.recipients.includes(user)) {
-            summary = [
-              email.sender, 
-              email.subject, 
-              email.timestamp,
-              email.read
-            ];
-            for (const field of summary) {
-              console.log(field)
-              let p = document.createElement('p');
-              
-              p.appendChild(document.createTextNode(field));
-              content.appendChild(p);
-            }
-            let hr = document.createElement('hr');
-            content.appendChild(hr);
-          }
-        })
-      })
-    
-  } else {
+}
 
-    // Body of email div
-    document.querySelector('#emails-body').innerHTML = `<p>default</p>`;
-  }
-   
+function display_emails(emails) {
+  const user = document.querySelector('#user').textContent;
+  let content = document.querySelector('#emails-view');
+  emails.forEach(email => {
+    summary = [
+      email.sender,
+      email.subject,
+      email.timestamp,
+      email.read
+    ];
+    for (const field of summary) {
+      let p = document.createElement('p');
+      p.appendChild(document.createTextNode(field));
+      content.appendChild(p);
+    }
+    let hr = document.createElement('hr');
+    content.appendChild(hr);
+  })
 }
