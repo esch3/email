@@ -60,42 +60,96 @@ function load_mailbox(mailbox) {
       fetch('/emails/sent')
         .then(response => response.json())
         .then(emails => {
-          display_emails(emails);
+          display_email_list(emails);
         });
         break;
     case "inbox":   
       fetch('/emails/inbox')
         .then(response => response.json())
         .then(emails => {
-          display_emails(emails);
+          display_email_list(emails);
         });
         break;
     case "archive": 
       fetch('/emails/archive')
-        .then(reponse => response.json())
+        .then(response => response.json())
         .then(emails => {
-          display_emails(emails);
+          display_email_list(emails);
       });
       break;
   }
 }
 
-function display_emails(emails) {
+function display_email_list(emails) {
   const user = document.querySelector('#user').textContent;
   let content = document.querySelector('#emails-view');
+  content.classList.add("container");
   emails.forEach(email => {
-    summary = [
-      email.sender,
-      email.subject,
-      email.timestamp,
-      email.read
-    ];
-    for (const field of summary) {
-      let p = document.createElement('p');
-      p.appendChild(document.createTextNode(field));
-      content.appendChild(p);
+    // container for each email
+    let emailDiv = document.createElement('div');
+    // Set id for each email div to the appropriate ID
+    emailID = email.id;
+    emailDiv.id = emailID;
+    // Use bootstrap grid for display
+    emailDiv.classList.add("row");
+    emailDiv.style.height = "90px";
+    emailDiv.style.padding = "10px";
+    if (email.read == true) {
+      emailDiv.style.backgroundColor = "lightgray";
+    } else {
+      emailDiv.style.backgroundColor = "white";
     }
-    let hr = document.createElement('hr');
-    content.appendChild(hr);
+    emailDiv.style.border = "1px solid black";
+    let senderDiv = document.createElement('div');
+    let subjectDiv = document.createElement('div');
+    let senderSenderDiv = document.createElement('div');
+    let senderDateDiv = document.createElement('div');
+    emailDiv.classList.add("row");
+    senderDiv.classList.add("col-4");
+    senderSenderDiv.classList.add("row");
+    senderDateDiv.classList.add("row");
+    subjectDiv.classList.add("col-8");
+    sender = document.createTextNode(email.sender);
+    senderBold = document.createElement('b');
+    senderBold.appendChild(sender);
+    date = document.createTextNode(email.timestamp);
+    subject = document.createTextNode(email.subject);
+    senderSenderDiv.appendChild(senderBold);
+    senderDateDiv.appendChild(date);
+    senderDiv.appendChild(senderSenderDiv);
+    senderDiv.appendChild(senderDateDiv);
+    subjectDiv.appendChild(subject);
+    emailDiv.appendChild(senderDiv);
+    emailDiv.appendChild(subjectDiv);
+    content.appendChild(emailDiv);
+    document.getElementById(emailID).addEventListener(
+      "mouseenter", function (event) {
+        event.target.style.color = "orange";
+      }
+    )
+    document.getElementById(emailID).addEventListener(
+      "mouseleave", function (event) {
+        event.target.style.color = "black";
+      }
+    )
+    document.getElementById(emailID).addEventListener(
+      'click',
+       () => fetch(`/emails/${emailID}`)
+        .then(response => response.json())
+        .then(email => {
+          view_email(email);
+        })
+       ); 
   })
+}
+
+function view_email(email) {
+  console.log(email);
+  let content = document.querySelector('#emails-view');
+  content.innerHTML = '';
+  for (const field in email) {
+    let p = document.createElement('p')
+    p.appendChild(document.createTextNode(field + ": " + email[field]));
+    content.append(p);
+  }
 }
