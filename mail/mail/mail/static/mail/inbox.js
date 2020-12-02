@@ -41,7 +41,6 @@ function compose_email() {
         console.log(result);
         load_mailbox('sent');
       });
-    
     return false;
   }
 }
@@ -60,27 +59,30 @@ function load_mailbox(mailbox) {
       fetch('/emails/sent')
         .then(response => response.json())
         .then(emails => {
-          display_email_list(emails);
+          displayEmails(emails);
         });
-        break;
+      break;
     case "inbox":   
       fetch('/emails/inbox')
         .then(response => response.json())
         .then(emails => {
-          display_email_list(emails);
+          console.log('loading inbox mailbox...')
+          displayEmails(emails);
         });
-        break;
+      break;
     case "archive": 
       fetch('/emails/archive')
         .then(response => response.json())
         .then(emails => {
-          display_email_list(emails);
-      });
+          console.log('loading archive mailbox...');
+          console.log(emails);
+          displayEmails(emails);
+        });
       break;
   }
 }
 
-function display_email_list(emails) {
+function displayEmails(emails) {
   const user = document.querySelector('#user').textContent;
   let content = document.querySelector('#emails-view');
   content.classList.add("container");
@@ -88,13 +90,13 @@ function display_email_list(emails) {
     // container for each email
     let emailDiv = document.createElement('div');
     // Set id for each email div to the appropriate ID
-    emailID = email.id;
-    emailDiv.id = emailID;
+    emailDiv.id = email.id;
+    
     // Use bootstrap grid for display
     emailDiv.classList.add("row");
     emailDiv.style.height = "90px";
     emailDiv.style.padding = "10px";
-    if (email.read == true) {
+    if (email.read === true) {
       emailDiv.style.backgroundColor = "lightgray";
     } else {
       emailDiv.style.backgroundColor = "white";
@@ -122,34 +124,84 @@ function display_email_list(emails) {
     emailDiv.appendChild(senderDiv);
     emailDiv.appendChild(subjectDiv);
     content.appendChild(emailDiv);
-    document.getElementById(emailID).addEventListener(
+    
+    // Event listeners
+    document.getElementById(email.id).addEventListener(
       "mouseenter", function (event) {
         event.target.style.color = "orange";
       }
     )
-    document.getElementById(emailID).addEventListener(
+    
+    document.getElementById(email.id).addEventListener(
       "mouseleave", function (event) {
         event.target.style.color = "black";
       }
     )
-    document.getElementById(emailID).addEventListener(
-      'click',
-       () => fetch(`/emails/${emailID}`)
-        .then(response => response.json())
-        .then(email => {
-          view_email(email);
-        })
-       ); 
+    
+    const markAsRead = () => fetch(`/emails/${email.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        read: true
+      })
+    });
+
+    const retrieve = () => fetch(`/emails/${email.id}`)
+      .then(response => response.json())
+      .then(email => {
+        viewEmail(email);
+      });
+    
+    document.getElementById(email.id).addEventListener(
+      'click', () => {
+        markAsRead();
+        retrieve();
+        
+      }); 
   })
 }
 
-function view_email(email) {
-  console.log(email);
+function viewEmail(email) {
   let content = document.querySelector('#emails-view');
   content.innerHTML = '';
+  
   for (const field in email) {
     let p = document.createElement('p')
     p.appendChild(document.createTextNode(field + ": " + email[field]));
-    content.append(p);
+    content.appendChild(p);
+  }
+
+  let archiveButton = document.createElement("input");
+  archiveButton.type = "button";
+  archiveButton.value = "Archive";
+  const archive = () => fetch(`/emails/${email.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      archived: true
+    })
+  });
+  
+  let unarchiveButton = document.createElement("input");
+  unarchiveButton.type = "button";
+  unarchiveButton.value = "Unarchive";
+  const unarchive = () => fetch(`/emails/${email.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      archived: false
+    })
+  });
+  archived = email.archived;
+  archiveButton.onclick = function(archived) {
+    archive();
+    load_mailbox('inbox');
+  };
+  
+  unarchiveButton.onclick = function(archived) {
+    unarchive();
+    load_mailbox('inbox');
+  }
+  if (archived) {
+    content.append(unarchiveButton);
+  } else if (!archived) {
+    content.append(archiveButton);
   }
 }
