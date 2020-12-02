@@ -10,14 +10,28 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
+var to = "";
+var reSubject = "";
 function compose_email() {
+  console.log(to);
+  console.log(reSubject);
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // Clear out composition fields
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
+  if (to) {
+    document.querySelector('#compose-recipients').value = to;
+    to = '';
+  } else {
+    document.querySelector('#compose-recipients').value = '';
+  }
+  if (reSubject) {
+    document.querySelector('#compose-subject').value = "Re: " + reSubject;
+    reSubject = '';
+  } else {
+    document.querySelector('#compose-subject').value = '';
+  }
   document.querySelector('#compose-body').value = '';
 
   // get data from form fields
@@ -204,4 +218,15 @@ function viewEmail(email) {
   } else if (!archived) {
     content.append(archiveButton);
   }
+
+  let replyButton = document.createElement("input");
+  replyButton.type = "button";
+  replyButton.value = "Reply";
+  replyButton.onclick = function() {
+    to = email.sender;
+    reSubject = email.subject;
+    compose_email();
+  }
+  content.append(replyButton);
+
 }
