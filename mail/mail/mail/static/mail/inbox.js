@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 var to = "";
 var reSubject = "";
+var reBody = "";
 function compose_email() {
   console.log(to);
   console.log(reSubject);
@@ -32,8 +33,17 @@ function compose_email() {
   } else {
     document.querySelector('#compose-subject').value = '';
   }
-  document.querySelector('#compose-body').value = '';
+  if (reBody) {
+    document.querySelector('#compose-body').value = reBody;
+    reBody = '';
+  } else {
+    document.querySelector('#compose-body').value = '';
+  }
 
+/*
+  document.querySelector('#compose-recipients').value = '';
+  document.querySelector('#compose-body').value = '';
+  document.querySelector('#compose-subject').value = '';*/
   // get data from form fields
   document.querySelector('#compose-form').onsubmit = () => {
     
@@ -111,7 +121,7 @@ function displayEmails(emails) {
     emailDiv.style.height = "90px";
     emailDiv.style.padding = "10px";
     if (email.read === true) {
-      emailDiv.style.backgroundColor = "lightgray";
+      emailDiv.style.backgroundColor = "rgb(220, 220, 220, 0.5)";
     } else {
       emailDiv.style.backgroundColor = "white";
     }
@@ -143,12 +153,14 @@ function displayEmails(emails) {
     document.getElementById(email.id).addEventListener(
       "mouseenter", function (event) {
         event.target.style.color = "orange";
+        event.target.style.cursor = "pointer";
       }
     )
     
     document.getElementById(email.id).addEventListener(
       "mouseleave", function (event) {
         event.target.style.color = "black";
+        event.target.style.cursor = "pointer";
       }
     )
     
@@ -225,6 +237,7 @@ function viewEmail(email) {
   replyButton.onclick = function() {
     to = email.sender;
     reSubject = email.subject;
+    reBody = "On " + email.timestamp + " " + email.sender + " wrote: " + email.body; 
     compose_email();
   }
   content.append(replyButton);
