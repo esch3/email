@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
   load_mailbox('inbox');
 });
 
+
+
 var to = "";
 var reSubject = "";
 var reBody = "";
@@ -40,10 +42,6 @@ function compose_email() {
     document.querySelector('#compose-body').value = '';
   }
 
-/*
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-body').value = '';
-  document.querySelector('#compose-subject').value = '';*/
   // get data from form fields
   document.querySelector('#compose-form').onsubmit = () => {
     
@@ -70,7 +68,6 @@ function compose_email() {
 }
 
 function load_mailbox(mailbox) {
-  
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
@@ -109,6 +106,7 @@ function load_mailbox(mailbox) {
 function displayEmails(emails) {
   const user = document.querySelector('#user').textContent;
   let content = document.querySelector('#emails-view');
+  
   content.classList.add("container");
   emails.forEach(email => {
     // container for each email
@@ -118,14 +116,14 @@ function displayEmails(emails) {
     
     // Use bootstrap grid for display
     emailDiv.classList.add("row");
-    emailDiv.style.height = "90px";
+    emailDiv.style.height = "75px";
     emailDiv.style.padding = "10px";
     if (email.read === true) {
       emailDiv.style.backgroundColor = "rgb(220, 220, 220, 0.5)";
     } else {
       emailDiv.style.backgroundColor = "white";
     }
-    emailDiv.style.border = "1px solid black";
+    emailDiv.style.border = "1px solid rgb(0,0,0,0.1)";
     let senderDiv = document.createElement('div');
     let subjectDiv = document.createElement('div');
     let senderSenderDiv = document.createElement('div');
@@ -152,7 +150,7 @@ function displayEmails(emails) {
     // Event listeners
     document.getElementById(email.id).addEventListener(
       "mouseenter", function (event) {
-        event.target.style.color = "orange";
+        event.target.style.color = "coral";
         event.target.style.cursor = "pointer";
       }
     )
@@ -181,9 +179,9 @@ function displayEmails(emails) {
       'click', () => {
         markAsRead();
         retrieve();
-        
       }); 
   })
+  return 0;
 }
 
 function viewEmail(email) {
@@ -215,22 +213,28 @@ function viewEmail(email) {
       archived: false
     })
   });
+  // which button to display based on whether or not email is archived
   archived = email.archived;
-  archiveButton.onclick = function(archived) {
-    archive();
-    load_mailbox('inbox');
-  };
-  
-  unarchiveButton.onclick = function(archived) {
-    unarchive();
-    load_mailbox('inbox');
-  }
   if (archived) {
     content.append(unarchiveButton);
   } else if (!archived) {
     content.append(archiveButton);
   }
-
+  const load = function() {
+    load_mailbox('inbox');
+  }
+  archiveButton.onclick = function() {
+    archive();
+    archiveButton.disabled = true;
+    setTimeout(load, 200);
+    
+  };
+  unarchiveButton.onclick = function() {
+    unarchive();
+    unarchiveButton.disabled = true;
+    setTimeout(load, 200);
+    
+  };
   let replyButton = document.createElement("input");
   replyButton.type = "button";
   replyButton.value = "Reply";
@@ -241,5 +245,4 @@ function viewEmail(email) {
     compose_email();
   }
   content.append(replyButton);
-
 }
