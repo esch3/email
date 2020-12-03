@@ -80,7 +80,7 @@ function load_mailbox(mailbox) {
       fetch('/emails/sent')
         .then(response => response.json())
         .then(emails => {
-          displayEmails(emails);
+          displayEmails(emails, 'sent');
         });
       break;
     case "inbox":   
@@ -88,7 +88,7 @@ function load_mailbox(mailbox) {
         .then(response => response.json())
         .then(emails => {
           console.log('loading inbox mailbox...')
-          displayEmails(emails);
+          displayEmails(emails, 'inbox');
         });
       break;
     case "archive": 
@@ -97,16 +97,20 @@ function load_mailbox(mailbox) {
         .then(emails => {
           console.log('loading archive mailbox...');
           console.log(emails);
-          displayEmails(emails);
+          displayEmails(emails, 'archive');
         });
       break;
   }
 }
 
-function displayEmails(emails) {
+function displayEmails(emails, mailbox) {
+  
   const user = document.querySelector('#user').textContent;
   let content = document.querySelector('#emails-view');
-  
+  let body = document.querySelector('body');
+  body.style.backgroundColor = "white";
+  body.style.fontFamily = "'Padauk', sans-serif";
+  body.style.fontSize = "20px";
   content.classList.add("container");
   emails.forEach(email => {
     // container for each email
@@ -140,6 +144,7 @@ function displayEmails(emails) {
     subject = document.createTextNode(email.subject);
     senderSenderDiv.appendChild(senderBold);
     senderDateDiv.appendChild(date);
+    senderDateDiv.style.fontSize = "11px";
     senderDiv.appendChild(senderSenderDiv);
     senderDiv.appendChild(senderDateDiv);
     subjectDiv.appendChild(subject);
@@ -181,22 +186,80 @@ function displayEmails(emails) {
         retrieve();
       }); 
   })
-  return 0;
+
+  // refresh mailbox every 10s
+  /*
+  localStorage.setItem('mailbox', mailbox);
+  setTimeout(function() {
+    let box = localStorage.getItem('mailbox');
+    load_mailbox(box);
+  }, 10000);
+  */
 }
 
 function viewEmail(email) {
   let content = document.querySelector('#emails-view');
   content.innerHTML = '';
   
-  for (const field in email) {
-    let p = document.createElement('p')
-    p.appendChild(document.createTextNode(field + ": " + email[field]));
-    content.appendChild(p);
+  content.classList.add("container");
+  
+  // subject
+  subjectDiv = document.createElement('div');
+  subjectDiv.classList.add("row");
+  subjectDiv.style.height = "100px";
+  subjectDiv.style.backgroundColor = "pink";
+  let h1 = document.createElement('h1')
+  h1.appendChild(document.createTextNode(email.subject));
+  subjectDiv.appendChild(h1);
+  // sender date
+  senderDiv = document.createElement('div');
+  senderDiv.classList.add("row");
+  senderDiv.style.height = "50px";
+  senderDiv.style.backgroundColor = "blue";
+  var from = document.createElement('h4');
+  from.style.display = "inline";
+  var when = document.createElement('p');
+  when.style.fontSize = "12px";
+  when.style.display = "inline";
+  from.innerHTML = `${email.sender}`;
+  when.innerHTML = ` sent on ${email.timestamp} ...`;
+  from.append(when);
+  senderDiv.appendChild(from);
+  // recipients
+  recipientsDiv = document.createElement('div');
+  recipientsDiv.classList.add("row");
+  recipientsDiv.style.height = "100px";
+  recipientsDiv.style.backgroundColor = "pink";
+  var p = document.createElement('p');
+  p.appendChild(document.createTextNode("recipients: " + email.recipients));
+  recipientsDiv.appendChild(p);
+  // body
+  bodyDiv = document.createElement('div');
+  bodyDiv.classList.add("row");
+  //bodyDiv.style.height = "400px";
+  bodyDiv.style.backgroundColor = "blue";
+  var p = document.createElement('p');
+  p.appendChild(document.createTextNode(email.body));
+  bodyDiv.appendChild(p);
+
+  content.appendChild(subjectDiv);
+  content.appendChild(senderDiv);
+  content.appendChild(recipientsDiv);
+  content.appendChild(bodyDiv);
+  
+  let children = content.children;
+  for (var i = 0; i < children.length; i++) {
+    children[i].style.backgroundColor = "rgb(220, 220, 220, 0.5)";
+    children[i].style.padding = "20px";
   }
+  
+  content.style.marginTop = "25px";
+  
 
   let archiveButton = document.createElement("input");
   archiveButton.type = "button";
   archiveButton.value = "Archive";
+  archiveButton.classList.add("btn", "btn-sm", "btn-outline-primary");
   const archive = () => fetch(`/emails/${email.id}`, {
     method: 'PUT',
     body: JSON.stringify({
@@ -207,19 +270,46 @@ function viewEmail(email) {
   let unarchiveButton = document.createElement("input");
   unarchiveButton.type = "button";
   unarchiveButton.value = "Unarchive";
+  unarchiveButton.classList.add("btn", "btn-sm", "btn-outline-primary");
   const unarchive = () => fetch(`/emails/${email.id}`, {
     method: 'PUT',
     body: JSON.stringify({
       archived: false
     })
   });
+
+  let replyButton = document.createElement("input");
+  replyButton.type = "button";
+  replyButton.value = "Reply";
+  replyButton.classList.add("btn", "btn-sm", "btn-outline-primary");
+  replyButton.onclick = function () {
+    to = email.sender;
+    reSubject = email.subject;
+    reBody = "On " + email.timestamp + " " + email.sender + " wrote: " + email.body;
+    compose_email();
+  }
   // which button to display based on whether or not email is archived
   archived = email.archived;
+  var buttonDiv = document.createElement('div');
+  buttonDiv.classList.add("row", "justify-content-around");
+  buttonDivCol1 = document.createElement('div');
+  buttonDivCol1.classList.add('col-4');
+  buttonDivCol2 = document.createElement('div');
+  buttonDivCol2.classList.add("col-4");
   if (archived) {
-    content.append(unarchiveButton);
+    buttonDivCol1.appendChild(unarchiveButton);
+    
   } else if (!archived) {
-    content.append(archiveButton);
+    buttonDivCol1.appendChild(archiveButton);
+    
   }
+
+  buttonDivCol2.appendChild(replyButton);
+  buttonDiv.appendChild(buttonDivCol2);
+  buttonDiv.appendChild(buttonDivCol1);
+  buttonDiv.style.marginTop = "25px";
+  content.append(buttonDiv);
+
   const load = function() {
     load_mailbox('inbox');
   }
@@ -235,14 +325,6 @@ function viewEmail(email) {
     setTimeout(load, 200);
     
   };
-  let replyButton = document.createElement("input");
-  replyButton.type = "button";
-  replyButton.value = "Reply";
-  replyButton.onclick = function() {
-    to = email.sender;
-    reSubject = email.subject;
-    reBody = "On " + email.timestamp + " " + email.sender + " wrote: " + email.body; 
-    compose_email();
-  }
-  content.append(replyButton);
+  
+  
 }
