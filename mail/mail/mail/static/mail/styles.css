@@ -5,3 +5,45 @@ textarea {
 .email-header {
     width: 100%;
 }
+
+body {
+    background-color: white;
+    font-family: 'Padauk', sans-serif;
+    font-size: 20px;
+}
+
+@keyframes hide {
+    0% {
+        opacity: 1;
+        height: 100%;
+        line-height: 100%;
+        padding: 20px;
+        margin-bottom: 10px;
+    }
+    75% {
+        opacity: 0;
+        height: 100%;
+        line-height: 100%;
+        padding: 20px;
+        margin-bottom: 10px;
+    }
+    100% {
+        opacity: 0;
+        height: 0px;
+        line-height: 0px;
+        padding: 0px;
+        margin-bottom: 0px;
+    }
+}
+
+
+.email-div {
+    border: 1px solid rgb(0,0,0,0.1); 
+    height: 75px;
+    padding: 10px;
+    margin: 5px;
+    animation-name: hide;
+    animation-duration: 2s;
+    animation-fill-mode: forwards;
+    animation-play-state: paused;
+}
